@@ -4,9 +4,17 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
+var shortid = require('short-mongo-id');
 
 var routes = require('./routes/index');
+var auth = require('./routes/auth');
 var users = require('./routes/users');
+
+var User = require('./models/users').User;
+
+var passport = require('passport'),
+    FacebookStrategy = require('passport-facebook').Strategy;
 
 var app = express();
 
@@ -15,21 +23,83 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+    secret: process.env.SECRET || 'keyboard cat',
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser(function(user, done) {
+    done(null, user._id);
+});
+
+passport.deserializeUser(function(user_id, done) {
+    User.findById(user_id, 'name', function(err, user){
+        if (err) {
+            return callback(err.message, null);
+        }
+        if (!user) {
+            return callback("Could not find user "+ user_id);
+        }
+        done(null, user);
+    });
+});
+
+if (process.env.SAMKLANG_FACEBOOK_APP_ID && process.env.SAMKLANG_FACEBOOK_APP_SECRET) {
+    passport.use(new FacebookStrategy({
+        clientID: process.env.SAMKLANG_FACEBOOK_APP_ID,
+        clientSecret: process.env.SAMKLANG_FACEBOOK_APP_SECRET,
+        callbackURL: '/auth/facebook/callback',
+        passReqToCallback: true
+    },
+    function(req, accessToken, refreshToken, profile, done) {
+        if (req.user) {
+            req.user.facebook_id = profile.id;
+            req.user.facebook_access_token = accessToken;
+            req.user.save(function (err, user) {
+                req.session.returnTo = '/users/' + req.user.username;
+                if (user) {
+                    //req.flash('success', 'Du kan nå logge inn med Facebook-kontoen');
+                }
+                return done(err, user);
+            });
+        }
+        else {
+            User.findOne({facebook_id: profile.id}, function (err, user) {
+                if (!user) {
+                    user = new User();
+                    user._id = shortid();
+                    user.name = profile.displayName;
+                    user.email = profile.emails[0].value;
+                    user.facebook_id = profile.id;
+                    user.facebook_access_token = accessToken;
+                    user.save(function (err) {
+                        if (err) { console.error(err); }
+                        return done(err, user);
+                    });
+                }
+                else {
+                    return done(err, user);
+                }
+            });
+        }
+    }));
+}
+app.use(function (req, res, next) {
+    res.locals.active_user = req.user;
+    next();
+});
 
 app.use('/', routes);
+app.use('/auth', auth);
 app.use('/users', users);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
-});
 
 // error handlers
 
@@ -37,6 +107,7 @@ app.use(function(req, res, next) {
 // will print stacktrace
 if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
+        console.error(err.stack);
         res.status(err.status || 500);
         res.render('error', {
             message: err.message,
@@ -49,6 +120,16 @@ if (app.get('env') === 'development') {
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
     res.status(err.status || 500);
+    res.render('error', {
+        message: err.message,
+        error: {}
+    });
+});
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
     res.render('error', {
         message: err.message,
         error: {}
