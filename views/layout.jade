@@ -1,7 +1,45 @@
 doctype html
-html
+
+html(lang=lang dir=lang_dir locale=locale)
   head
+    meta(charset="utf-8")
     title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    meta(name="author" content="Strekmann")
+    link(href="/stylesheets/styles.css" rel="stylesheet")
+
+    //if lt IE 9
+      script(src='http://html5shim.googlecode.com/svn/trunk/html5.js')
+
+    script(src="/javascripts/modernizr.js")
+    link(rel="shortcut icon" href="/favicon.ico")
+
   body
+    nav.top-bar(role="navigation" data-topbar)
+      ul.title-area
+        li.name
+          h1
+            a(href="/") Samklang
+        li.toggle-topbar.menu-icon
+          a(href="#")
+            span Meny
+
+      section.top-bar-section
+        ul.right
+          if active_user
+            li
+              a(href="/_/o") Logg ut
+          else
+            li
+              a(href="/_/i") Logg inn
+
     block content
+
+    script(src="/javascripts/vendor.js")
+    script(src="/javascripts/site.js")
+
+    script.
+      var doc = $(document);
+      doc.foundation();
+
+    block javascript
