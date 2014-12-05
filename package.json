@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "postinstall": "bower install && grunt build"
+    "postinstall": "./node_modules/.bin/bower install && ./node_modules/.bin/grunt build"
   },
   "dependencies": {
     "body-parser": "~1.8.1",
