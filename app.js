@@ -8,7 +8,7 @@ var session = require('express-session');
 var shortid = require('short-mongo-id');
 
 var routes = require('./routes/index');
-var auth = require('./routes/auth');
+var admin = require('./routes/admin');
 var users = require('./routes/users');
 
 var User = require('./models/users').User;
@@ -56,7 +56,7 @@ if (process.env.SAMKLANG_FACEBOOK_APP_ID && process.env.SAMKLANG_FACEBOOK_APP_SE
     passport.use(new FacebookStrategy({
         clientID: process.env.SAMKLANG_FACEBOOK_APP_ID,
         clientSecret: process.env.SAMKLANG_FACEBOOK_APP_SECRET,
-        callbackURL: '/auth/facebook/callback',
+        callbackURL: '/_/facebook/callback',
         passReqToCallback: true
     },
     function(req, accessToken, refreshToken, profile, done) {
@@ -98,7 +98,7 @@ app.use(function (req, res, next) {
 });
 
 app.use('/', routes);
-app.use('/auth', auth);
+app.use('/_', admin);
 app.use('/users', users);
 
 // error handlers
