@@ -6,6 +6,11 @@ var UserSchema = new mongoose.Schema({
     email: {type: String, required: true},
     facebook_id: {type: String, unique: true, sparse: true},
     facebook_access_token: {type: String},
+    facebook_profile_url: {type: String},
+    facebook_locale: {type: String},
+    facebook_timezone: {type: Number},
+    facebook_verified: {type: Boolean},
+    facebook_updated_time: {type: Date},
     is_active: {type: Boolean, default: true},
     created: {type: Date, default: Date.now}
 });

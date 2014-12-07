@@ -5,14 +5,14 @@ var debug = require('debug')('samklang');
 if (!process.env.SAMKLANG_DOMAIN) {
     process.env.SAMKLANG_DOMAIN = 'example.com';
 }
-if (process.env.NODE_ENV === 'development') {
-    process.env.SAMKLANG_DB = 'mongodb://localhost/samklang';
-}
-else if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production') {
     process.env.SAMKLANG_DB = process.env.MONGOLAB_URI;
 }
-else {
+else if (process.env.NODE_ENV === 'test') {
     process.env.SAMKLANG_DB = 'mongodb://localhost/samklang-test';
+}
+else {
+    process.env.SAMKLANG_DB = 'mongodb://localhost/samklang';
 }
 
 var app = require('../app');

@@ -65,6 +65,11 @@ if (process.env.SAMKLANG_FACEBOOK_APP_ID && process.env.SAMKLANG_FACEBOOK_APP_SE
         if (req.user) {
             req.user.facebook_id = profile.id;
             req.user.facebook_access_token = accessToken;
+            req.user.facebook_profile_url = profile.profileUrl;
+            req.user.facebook_locale = profile._json.locale;
+            req.user.facebook_timezone = profile._json.timezone;
+            req.user.facebook_verified = profile._json.verified;
+            req.user.facebook_updated_time = profile._json.updated_time;
             req.user.save(function (err, user) {
                 req.session.returnTo = '/users/' + req.user.username;
                 if (user) {
@@ -81,15 +86,17 @@ if (process.env.SAMKLANG_FACEBOOK_APP_ID && process.env.SAMKLANG_FACEBOOK_APP_SE
                     user.name = profile.displayName;
                     user.email = profile.emails[0].value;
                     user.facebook_id = profile.id;
-                    user.facebook_access_token = accessToken;
-                    user.save(function (err) {
-                        if (err) { console.error(err); }
-                        return done(err, user);
-                    });
                 }
-                else {
+                user.facebook_access_token = accessToken;
+                user.facebook_profile_url = profile.profileUrl;
+                user.facebook_locale = profile._json.locale;
+                user.facebook_timezone = profile._json.timezone;
+                user.facebook_verified = profile._json.verified;
+                user.facebook_updated_time = profile._json.updated_time;
+                user.save(function (err) {
+                    if (err) { console.error(err); }
                     return done(err, user);
-                }
+                });
             });
         }
     }));

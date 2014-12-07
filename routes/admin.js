@@ -4,8 +4,13 @@ var router = express.Router();
 var passport = require('passport');
 var authenticated = require('../middleware').authenticated;
 
-router.get('/l', function (req, res) {
+router.get('/i', function (req, res) {
     res.render('login', {title: 'Logg inn'});
+});
+router.get('/o', function (req, res) {
+    req.logout();
+    req.session.destroy();
+    res.redirect('/');
 });
 router.get('/r', authenticated, function(req, res) {
     res.render('index', {title: 'Ny side: ' +  req.hostname});
