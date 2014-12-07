@@ -13,7 +13,7 @@ router.get('/o', function (req, res) {
     res.redirect('/');
 });
 router.get('/r', authenticated, function(req, res) {
-    res.render('index', {title: 'Ny side: ' +  req.hostname});
+    res.render('page', {title: 'Ny side: ' +  req.hostname});
 });
 
 router.get('/facebook', passport.authenticate('facebook'));
@@ -25,6 +25,5 @@ router.get('/facebook/callback', passport.authenticate('facebook', {
     delete req.session.returnTo;
     res.redirect(url);
 });
-
 
 module.exports = router;
