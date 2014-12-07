@@ -19,7 +19,11 @@ html(lang=lang dir=lang_dir locale=locale)
       ul.title-area
         li.name
           h1
-            a(href="/") Samklang
+            a(href="/")
+              if (site)
+                = site.name
+              else
+                | Samklang
         li.toggle-topbar.menu-icon
           a(href="#")
             span Meny

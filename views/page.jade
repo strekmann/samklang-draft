@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  .row
+    .columns
+      h1 Opprett nytt nettsted: #{site_id}
+
+      form(action="", method="post")
+        .row
+          .columns
+            label(for="site_name") Navn på nettsted
+            input#site_name(type="text" name="site_name" placeholder=site_name)
+        .row
+          .columns
+            button Lagre
+            button.secondary(type="reset" onClick="window.location.href='/'") Avbryt

@@ -20,7 +20,9 @@ router.get('/', function(req, res) {
             query = {custom_domain: req.hostname};
         }
 
-        Site.findOne(query, function (err, site) {
+        Site.findOne(query)
+        .populate('creator', 'name')
+        .exec(function (err, site) {
             if (err) { console.error(err); }
             if (site) {
                 res.render('pages/index', { title: site._id, site: site });

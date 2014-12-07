@@ -14,6 +14,7 @@ var SiteSchema = new mongoose.Schema({
     entity_id: {type: String},
     local_bank_account: {type: String},
     international_bank_account: {type: String},
+    admin_group: {type: String, ref: 'Group'},
     created: {type: Date, default: Date.now},
     creator: {type: String, ref: 'User'}
 });

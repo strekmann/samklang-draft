@@ -1,8 +1,8 @@
-extends layout
+extends ../layout
 
 block content
   .row
     .columns
       h1 Velkommen til #{site.name}
 
-      p Denne siden ble registrert av #{site}
+      p Denne siden ble registrert av #{site.creator.name} #{site.created}
