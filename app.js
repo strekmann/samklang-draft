@@ -5,6 +5,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var MongoStore = require('connect-mongo')(session);
 var shortid = require('short-mongo-id');
 
 var routes = require('./routes/index');
@@ -30,8 +31,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(session({
     secret: process.env.SECRET || 'keyboard cat',
+    saveUninitialized: false,
     resave: false,
-    saveUninitialized: false
+    store: new MongoStore({url: process.env.SAMKLANG_DB})
 }));
 app.use(passport.initialize());
 app.use(passport.session());

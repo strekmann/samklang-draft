@@ -1,19 +1,24 @@
 #!/usr/bin/env node
 var mongoose = require('mongoose');
 var debug = require('debug')('samklang');
-var app = require('../app');
-
-app.set('port', process.env.PORT || 3000);
 
 if (!process.env.SAMKLANG_DOMAIN) {
     process.env.SAMKLANG_DOMAIN = 'example.com';
 }
-if (app.get('env') === 'development') {
-    mongoose.connect('mongodb://localhost/samklang');
+if (process.env.NODE_ENV === 'development') {
+    process.env.SAMKLANG_DB = 'mongodb://localhost/samklang';
 }
-else if (app.get('env') === 'production') {
-    mongoose.connect(process.env.MONGOLAB_URI);
+else if (process.env.NODE_ENV === 'production') {
+    process.env.SAMKLANG_DB = process.env.MONGOLAB_URI;
 }
+else {
+    process.env.SAMKLANG_DB = 'mongodb://localhost/samklang-test';
+}
+
+var app = require('../app');
+mongoose.connect(process.env.SAMKLANG_DB);
+
+app.set('port', process.env.PORT || 3000);
 
 var server = app.listen(app.get('port'), function() {
     debug('Express server listening on port ' + server.address().port);
