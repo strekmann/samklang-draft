@@ -60,7 +60,7 @@ passport.deserializeUser(function(user_id, done) {
 if (process.env.SAMKLANG_GOOGLE_APP_ID && process.env.SAMKLANG_GOOGLE_APP_SECRET) {
     var port_extension = '';
     var port = process.env.PORT || 3000;
-    if (port !== 80) {
+    if (port.length === 4) {
         port_extension = ':' + port;
     }
     passport.use(new GoogleStrategy({

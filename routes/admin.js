@@ -103,7 +103,7 @@ router.get('/google/callback', function (req, res, next) {
         var login_domain = req.session.login_domain;
         var port_extension = '';
         var port = process.env.PORT || 3000;
-        if (port !== 80) {
+        if (port.length === 4) {
             port_extension = ':' + port;
         }
         req.session.login_domain = undefined;
