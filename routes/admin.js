@@ -91,4 +91,22 @@ router.get('/facebook/callback', passport.authenticate('facebook', {
     res.redirect(url);
 });
 
+router.get('/google', passport.authenticate('google', {
+    scope: ['profile', 'email']
+}));
+
+router.get('/google/callback', function (req, res) {
+    if (req.hostname === process.env.SAMKLANG_DOMAIN) {
+        if (req.params.state) {
+            res.redirect(req.protocol + '://' + req.params.state + ':' + req.port + req.originalUrl);
+        }
+    }
+}, passport.authenticate('google', {
+    failureRedirect: '/'
+}), function (req, res) {
+    var url = req.session.returnTo || '/';
+    delete req.session.returnTo;
+    res.redirect(url);
+});
+
 module.exports = router;

@@ -2,6 +2,9 @@
 var mongoose = require('mongoose');
 var debug = require('debug')('samklang');
 
+if (!process.env.PROTOCOL) {
+    process.env.PROTOCOL = 'http';
+}
 if (!process.env.SAMKLANG_DOMAIN) {
     process.env.SAMKLANG_DOMAIN = 'example.com';
 }

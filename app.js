@@ -15,7 +15,8 @@ var users = require('./routes/users');
 var User = require('./models/users').User;
 
 var passport = require('passport'),
-    FacebookStrategy = require('passport-facebook').Strategy;
+    FacebookStrategy = require('passport-facebook').Strategy,
+    GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
 var app = express();
 
@@ -54,6 +55,73 @@ passport.deserializeUser(function(user_id, done) {
     });
 });
 
+
+if (process.env.SAMKLANG_GOOGLE_APP_ID && process.env.SAMKLANG_GOOGLE_APP_SECRET) {
+    var port_extension = '';
+    var port = process.env.PORT || 3000;
+    if (port !== 80) {
+        port_extension = ':' + port;
+    }
+    passport.use(new GoogleStrategy({
+        clientID: process.env.SAMKLANG_GOOGLE_APP_ID,
+        clientSecret: process.env.SAMKLANG_GOOGLE_APP_SECRET,
+        callbackURL: process.env.PROTOCOL + '://' + process.env.SAMKLANG_DOMAIN + port_extension + '/_/google/callback',
+        passReqToCallback: true
+    },
+    function(req, accessToken, refreshToken, profile, done) {
+        if (!profile) {
+            done(new Error("Could not log you in at Google"));
+        }
+        else {
+            if (req.user) {
+                req.user.google_id = profile.id;
+                req.user.google_picture_url = profile._json.picture;
+                req.user.google_profile_url = profile._json.link;
+                req.user.google_locale = profile._json.locale;
+                if (profile.emails && profile.emails[0] && profile.emails[0].value) {
+                    if (!req.user.email) {
+                        req.user.email = profile.emails[0].value;
+                    }
+                    if (!req.user.google_email) {
+                        req.user.google_email = profile.emails[0].value;
+                    }
+                }
+                req.user.save(function (err, user) {
+                    req.session.returnTo = '/users/' + req.user.username;
+                    if (user) {
+                    }
+                    return done(err, user);
+                });
+            }
+            else {
+                User.findOne({google_id: profile.id}, function (err, user) {
+                    if (!user) {
+                        user = new User();
+                        user._id = shortid();
+                        user.name = profile.displayName;
+                        user.picture_url = profile._json.picture;
+                        user.google_id = profile.id;
+                    }
+                    user.google_picture_url = profile._json.picture;
+                    user.google_profile_url = profile._json.link;
+                    user.google_locale = profile._json.locale;
+                    if (profile.emails && profile.emails[0] && profile.emails[0].value) {
+                        if (!user.email) {
+                            user.email = profile.emails[0].value;
+                        }
+                        if (!user.google_email) {
+                            user.google_email = profile.emails[0].value;
+                        }
+                    }
+                    user.save(function (err) {
+                        if (err) { console.error(err); }
+                        return done(err, user);
+                    });
+                });
+            }
+        }
+    }));
+}
 if (process.env.SAMKLANG_FACEBOOK_APP_ID && process.env.SAMKLANG_FACEBOOK_APP_SECRET) {
     passport.use(new FacebookStrategy({
         clientID: process.env.SAMKLANG_FACEBOOK_APP_ID,
