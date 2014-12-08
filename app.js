@@ -45,10 +45,10 @@ passport.serializeUser(function(user, done) {
 passport.deserializeUser(function(user_id, done) {
     User.findById(user_id, 'name', function(err, user){
         if (err) {
-            return callback(err.message, null);
+            return done(err);
         }
         if (!user) {
-            return callback("Could not find user "+ user_id);
+            done(null, null);
         }
         done(null, user);
     });
@@ -59,45 +59,72 @@ if (process.env.SAMKLANG_FACEBOOK_APP_ID && process.env.SAMKLANG_FACEBOOK_APP_SE
         clientID: process.env.SAMKLANG_FACEBOOK_APP_ID,
         clientSecret: process.env.SAMKLANG_FACEBOOK_APP_SECRET,
         callbackURL: '/_/facebook/callback',
+        authorizationURL: 'https://www.facebook.com/v2.2/dialog/oauth',
         passReqToCallback: true
     },
     function(req, accessToken, refreshToken, profile, done) {
-        if (req.user) {
-            req.user.facebook_id = profile.id;
-            req.user.facebook_access_token = accessToken;
-            req.user.facebook_profile_url = profile.profileUrl;
-            req.user.facebook_locale = profile._json.locale;
-            req.user.facebook_timezone = profile._json.timezone;
-            req.user.facebook_verified = profile._json.verified;
-            req.user.facebook_updated_time = profile._json.updated_time;
-            req.user.save(function (err, user) {
-                req.session.returnTo = '/users/' + req.user.username;
-                if (user) {
-                    //req.flash('success', 'Du kan nå logge inn med Facebook-kontoen');
-                }
-                return done(err, user);
-            });
+        if (!profile) {
+            done(new Error("Could not log you in at Facebook"));
         }
         else {
-            User.findOne({facebook_id: profile.id}, function (err, user) {
-                if (!user) {
-                    user = new User();
-                    user._id = shortid();
-                    user.name = profile.displayName;
-                    user.email = profile.emails[0].value;
-                    user.facebook_id = profile.id;
+            if (req.user) {
+                req.user.facebook_id = profile.id;
+                req.user.facebook_profile_url = profile.profileUrl;
+                req.user.facebook_picture_url = req.user.get_facebook_image_url();
+                req.user.facebook_locale = profile._json.locale;
+                req.user.facebook_timezone = profile._json.timezone;
+                req.user.facebook_verified = profile._json.verified;
+                req.user.facebook_updated_time = profile._json.updated_time;
+                if (profile.emails && profile.emails[0] && profile.emails[0].value) {
+                    if (!req.user.email) {
+                        req.user.email = profile.emails[0].value;
+                    }
+                    if (!req.user.facebook_email) {
+                        req.user.facebook_email = profile.emails[0].value;
+                    }
                 }
-                user.facebook_access_token = accessToken;
-                user.facebook_profile_url = profile.profileUrl;
-                user.facebook_locale = profile._json.locale;
-                user.facebook_timezone = profile._json.timezone;
-                user.facebook_verified = profile._json.verified;
-                user.facebook_updated_time = profile._json.updated_time;
-                user.save(function (err) {
-                    if (err) { console.error(err); }
+                if (!req.user.picture_url) {
+                    req.user.picture_url = req.user.facebook_picture_url;
+                }
+                req.user.save(function (err, user) {
+                    req.session.returnTo = '/users/' + req.user.username;
+                    if (user) {
+                        //req.flash('success', 'Du kan nå logge inn med Facebook-kontoen');
+                    }
                     return done(err, user);
                 });
-            });
+            }
+            else {
+                User.findOne({facebook_id: profile.id}, function (err, user) {
+                    if (!user) {
+                        user = new User();
+                        user._id = shortid();
+                        user.name = profile.displayName;
+                        user.facebook_id = profile.id;
+                        user.facebook_picture_url = user.get_facebook_image_url();
+                    }
+                    user.facebook_profile_url = profile.profileUrl;
+                    user.facebook_locale = profile._json.locale;
+                    user.facebook_timezone = profile._json.timezone;
+                    user.facebook_verified = profile._json.verified;
+                    user.facebook_updated_time = profile._json.updated_time;
+                    if (profile.emails && profile.emails[0] && profile.emails[0].value) {
+                        if (!user.email) {
+                            user.email = profile.emails[0].value;
+                        }
+                        if (!user.facebook_email) {
+                            user.facebook_email = profile.emails[0].value;
+                        }
+                    }
+                    if (!user.picture_url) {
+                        user.picture_url = user.facebook_picture_url;
+                    }
+                    user.save(function (err) {
+                        if (err) { console.error(err); }
+                        return done(err, user);
+                    });
+                });
+            }
         }
     }));
 }
