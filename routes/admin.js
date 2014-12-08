@@ -91,16 +91,26 @@ router.get('/facebook/callback', passport.authenticate('facebook', {
     res.redirect(url);
 });
 
-router.get('/google', passport.authenticate('google', {
+router.get('/google', function (req, res, next) {
+    req.session.login_domain = req.hostname;
+    next();
+}, passport.authenticate('google', {
     scope: ['profile', 'email']
 }));
 
-router.get('/google/callback', function (req, res) {
-    if (req.hostname === process.env.SAMKLANG_DOMAIN) {
-        if (req.params.state) {
-            res.redirect(req.protocol + '://' + req.params.state + ':' + req.port + req.originalUrl);
+router.get('/google/callback', function (req, res, next) {
+    if (req.hostname === process.env.SAMKLANG_DOMAIN && req.session.login_domain) {
+        var login_domain = req.session.login_domain;
+        var port_extension = '';
+        var port = process.env.PORT || 3000;
+        if (port !== 80) {
+            port_extension = ':' + port;
         }
+        req.session.login_domain = undefined;
+        res.redirect(process.env.PROTOCOL + '://' + login_domain + port_extension + req.originalUrl);
+        return;
     }
+    next();
 }, passport.authenticate('google', {
     failureRedirect: '/'
 }), function (req, res) {

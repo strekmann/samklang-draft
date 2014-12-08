@@ -34,6 +34,7 @@ app.use(session({
     secret: process.env.SECRET || 'keyboard cat',
     saveUninitialized: false,
     resave: false,
+    cookie: {domain: '.' + process.env.SAMKLANG_DOMAIN},
     store: new MongoStore({url: process.env.SAMKLANG_DB})
 }));
 app.use(passport.initialize());
